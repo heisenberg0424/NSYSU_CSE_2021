@@ -1,0 +1,3 @@
+將資料input後計算sortness，之後照sortness排序即可
+注意如使用algorithm.h 裡的 sort了話 要呼叫stable_sort() 而不是 sort()
+否則會有同樣sortnes排序後順序改變的狀況

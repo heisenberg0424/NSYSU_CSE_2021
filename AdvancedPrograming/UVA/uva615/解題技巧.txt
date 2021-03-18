@@ -1,0 +1,5 @@
+把input 會製成 adjecency matrix
+將每一column相加後如有兩個0 則代表有兩個root 
+有超過1的代表有連接到同一個點的兩個點
+最後再用bfs檢查是否有cycle
+
