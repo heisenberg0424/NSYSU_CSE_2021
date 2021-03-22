@@ -1,0 +1,13 @@
+本題會先用struct除存input
+ie: struct{
+	int value ie:89
+	string position ie:LRRLR
+}
+
+之後再用position字串長度做sort 如一樣則L在R前面
+eg : L LR R LL RR RL
+sort 之後 : L R LL LR RL RR
+
+就可用迴圈將value輸出
+本題須注意input結束是等待EOF，所以使用while(cin>>input) 再將字串處理成 value , position會比較好做
+
