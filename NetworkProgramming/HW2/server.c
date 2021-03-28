@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <unistd.h>
 int main(){
     int fd;
     struct sockaddr_in srv;
@@ -33,4 +34,13 @@ int main(){
         exit(1);
     }
     printf("Acceped\n");
+
+    char buf[512];
+    int nbytes;
+    
+    if(nbytes = read(newfd,buf,sizeof(buf)) < 0){
+        perror("read filename");
+        exit(1);
+    }
+    printf("Filename : %s\n",buf);
 }
