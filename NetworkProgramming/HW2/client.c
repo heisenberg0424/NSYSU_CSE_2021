@@ -10,7 +10,7 @@
 #include <unistd.h>
 #include <netinet/in.h>
 int main(){
-    int fd;
+    int fd,bytesleft;
     struct addrinfo hints,*res;
 
     memset(&hints,0,sizeof(hints));
@@ -28,7 +28,7 @@ int main(){
     }
     printf("Connected\n");
 
-    char buf[512]="test.txt";
+    char buf[512]="testpic.png";
     int nbytes;
     if( nbytes = write(fd,buf,sizeof(buf)) < 0){
         perror("write filename");
@@ -37,9 +37,15 @@ int main(){
     printf("filename sent\n");
 
     int sendfile = open(buf,O_RDONLY);
-    while(read(sendfile,buf,sizeof(buf))){
-        if( nbytes = write(fd,buf,sizeof(buf)) < 0){
-            perror("write filename");
+    if(sendfile<0){
+        perror("Open file");
+        exit(1);
+    }
+
+    while(bytesleft=read(sendfile,buf,sizeof(buf)) >=0){
+        printf("Bytesleft: %d\n",bytesleft);
+        if( write(fd,buf,sizeof(buf)) < 0 ){
+            perror("write file");
             exit(1);
         }
     }

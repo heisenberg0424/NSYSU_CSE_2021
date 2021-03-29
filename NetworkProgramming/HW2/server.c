@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <netinet/in.h>
 #include <unistd.h>
-#include <cstring>
+#include <string.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -54,7 +54,7 @@ int main(){
     int revfile = open(pwd,O_WRONLY|O_CREAT|O_TRUNC,S_IRWXU);
 
     
-    while(nbytes = read(newfd,buf,sizeof(buf))){
+    while(read(newfd,buf,sizeof(buf))){
         write(revfile,buf,sizeof(buf));
     }
     printf("File recieved\n");
