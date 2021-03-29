@@ -1,11 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/socket.h>
-#include <netinet/in.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
 #include <sys/types.h>
 #include <netdb.h>
 #include <string.h>
 #include <unistd.h>
+#include <netinet/in.h>
 int main(){
     int fd;
     struct addrinfo hints,*res;
@@ -32,4 +35,16 @@ int main(){
         exit(1);
     }
     printf("filename sent\n");
+
+    int sendfile = open(buf,O_RDONLY);
+    while(read(sendfile,buf,sizeof(buf))){
+        if( nbytes = write(fd,buf,sizeof(buf)) < 0){
+            perror("write filename");
+            exit(1);
+        }
+    }
+    
+    printf("file sent\n");
+    close(fd);
+    close(sendfile);
 }

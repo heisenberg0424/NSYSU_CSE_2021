@@ -1,8 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/socket.h>
 #include <netinet/in.h>
 #include <unistd.h>
+#include <cstring>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
 int main(){
     int fd;
     struct sockaddr_in srv;
@@ -36,6 +41,7 @@ int main(){
     printf("Acceped\n");
 
     char buf[512];
+    char pwd[512]="rev/";
     int nbytes;
     
     if(nbytes = read(newfd,buf,sizeof(buf)) < 0){
@@ -43,4 +49,18 @@ int main(){
         exit(1);
     }
     printf("Filename : %s\n",buf);
+
+    strcat(pwd,buf);
+    int revfile = open(pwd,O_WRONLY|O_CREAT|O_TRUNC,S_IRWXU);
+
+    
+    while(nbytes = read(newfd,buf,sizeof(buf))){
+        write(revfile,buf,sizeof(buf));
+    }
+    printf("File recieved\n");
+
+    close(revfile);
+    close(newfd);
+    close(fd);
+
 }
