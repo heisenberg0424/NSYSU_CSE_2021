@@ -43,7 +43,7 @@ int main(){
     char buf[512];
     char pwd[512]="rev/";
     int nbytes;
-    
+    memset(buf,0,sizeof(buf));
     if(nbytes = read(newfd,buf,sizeof(buf)) < 0){
         perror("read filename");
         exit(1);
