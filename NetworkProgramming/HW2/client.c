@@ -18,25 +18,38 @@ int clientlink(int *fd,char *ip,char *port);
 int sendfile(int *fd,char *filename);
 
 int main(){
-    int fd;
+    int fd,linkflag=0;
     char command[10],ipbuf[20],portbuf[10],filenamebuf[128];
     memset(command,0,sizeof(command));
     memset(ipbuf,0,sizeof(ipbuf));
     memset(portbuf,0,sizeof(portbuf));
     memset(filenamebuf,0,sizeof(filenamebuf));
+
+    //terminal
     while(1){
         prompt();
         scanf("%s",command);
         if( !strcmp(command,"link") ){
-            printf("Link\n");
+            scanf("%s%s",ipbuf,portbuf);
+            if(clientlink(&fd,ipbuf,portbuf)<0){
+                printf("link failed\n");
+            }else{
+                linkflag = 1;
+            }
         }
 
         else if( !strcmp(command,"send") ){
-            printf("Send\n");
+            scanf("%s",filenamebuf);
+            if(!linkflag){
+                printf("You have to link first\n");
+            }
+            else{
+                sendfile(&fd,filenamebuf);
+            }
         }
 
         else if( !strcmp(command,"leave") ){
-            printf("Leave\n");
+            break;
         }
 
         else 
@@ -48,8 +61,6 @@ int main(){
 
     //sendfile example
     //sendfile(&fd,"test.jpg");
-    
-    close(fd);
 }
 
 int clientlink(int *fd,char *ip,char *port){
@@ -68,7 +79,7 @@ int clientlink(int *fd,char *ip,char *port){
 
     if(connect(*fd,res->ai_addr,res->ai_addrlen)<0){
         perror("connect");
-        exit(1);
+        return -1;
     }
     printf("Connected\n");
     return 1;
@@ -82,6 +93,7 @@ int sendfile(int *fd,char *filename){
         perror("write filename");
         exit(1);
     }
+    printf("filename:%s, size:%ld\n",filename,sizeof(filename));
     printf("filename sent\n");
 
     int sendfile = open(filename,O_RDONLY);
@@ -91,12 +103,13 @@ int sendfile(int *fd,char *filename){
     }
 
     while( (bytesread=read(sendfile,buf,sizeof(buf))) > 0){
-        //printf("Bytes read: %d\n",bytesread);
         if( write(*fd,buf,sizeof(buf)) < 0 ){
             perror("write file");
             exit(1);
         }
     }
+    write(*fd,buf,sizeof(buf));
     printf("file sent\n");
     close(sendfile);
+    close(*fd);
 }

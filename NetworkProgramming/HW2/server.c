@@ -44,7 +44,7 @@ int main(){
     char pwd[512]="rev/";
     int nbytes;
     memset(buf,0,sizeof(buf));
-    if(nbytes = read(newfd,buf,sizeof(buf)) < 0){
+    if( (nbytes = read(newfd,buf,sizeof(buf))) < 0){
         perror("read filename");
         exit(1);
     }
@@ -53,8 +53,8 @@ int main(){
     strcat(pwd,buf);
     int revfile = open(pwd,O_WRONLY|O_CREAT|O_TRUNC,S_IRWXU);
 
-    
-    while(read(newfd,buf,sizeof(buf))){
+    memset(buf,0,sizeof(buf));
+    while(read(newfd,buf,sizeof(buf))>0){
         write(revfile,buf,sizeof(buf));
     }
     printf("File recieved\n");
