@@ -19,12 +19,35 @@ int sendfile(int *fd,char *filename);
 
 int main(){
     int fd;
-    
+    char command[10],ipbuf[20],portbuf[10],filenamebuf[128];
+    memset(command,0,sizeof(command));
+    memset(ipbuf,0,sizeof(ipbuf));
+    memset(portbuf,0,sizeof(portbuf));
+    memset(filenamebuf,0,sizeof(filenamebuf));
+    while(1){
+        prompt();
+        scanf("%s",command);
+        if( !strcmp(command,"link") ){
+            printf("Link\n");
+        }
+
+        else if( !strcmp(command,"send") ){
+            printf("Send\n");
+        }
+
+        else if( !strcmp(command,"leave") ){
+            printf("Leave\n");
+        }
+
+        else 
+            printf("invalid command\n");
+    }
+
     //link example
-    clientlink(&fd,"192.168.50.11","1500");
+    //clientlink(&fd,"192.168.50.11","1500");
 
     //sendfile example
-    sendfile(&fd,"test.jpg");
+    //sendfile(&fd,"test.jpg");
     
     close(fd);
 }
