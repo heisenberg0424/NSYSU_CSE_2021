@@ -1,14 +1,15 @@
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <netdb.h>
-#include <string.h>
+#include <cstring>
 #include <unistd.h>
 #include <netinet/in.h>
+#include <errno.h>
 void prompt(){
     printf("[ client@HW2 ]$ ");
 }
@@ -19,7 +20,7 @@ int sendfile(int *fd,char *filename);
 
 int main(){
     int fd,linkflag=0;
-    char command[10],ipbuf[20],portbuf[10],filenamebuf[128];
+    char command[10],ipbuf[128],portbuf[10],filenamebuf[128];
     memset(command,0,sizeof(command));
     memset(ipbuf,0,sizeof(ipbuf));
     memset(portbuf,0,sizeof(portbuf));
@@ -69,19 +70,20 @@ int clientlink(int *fd,char *ip,char *port){
     hints.ai_family=AF_INET;
     hints.ai_socktype=SOCK_STREAM;
 
-    if( getaddrinfo(ip,port,&hints,&res) <0 ){
-        perror("get addrinfo ");
+    if( getaddrinfo(ip,port,&hints,&res)!=0 ){
+        perror("get addrinfo");
         return -1;
     }
 
+
     *fd = socket(res->ai_family,res->ai_socktype,res->ai_protocol);
-    printf("New Socket fd: %d\n",*fd);
+    //printf("New Socket fd: %d\n",*fd);
 
     if(connect(*fd,res->ai_addr,res->ai_addrlen)<0){
         perror("connect");
         return -1;
     }
-    printf("Connected\n");
+    printf("The server with IP address \"%s\" has accepted your connection.\n",ip);
     return 1;
 }
 
@@ -91,25 +93,26 @@ int sendfile(int *fd,char *filename){
     
     if( write(*fd,filename,sizeof(filename)) < 0){
         perror("write filename");
-        exit(1);
+        return 1;
     }
-    printf("filename:%s, size:%ld\n",filename,sizeof(filename));
+    //printf("filename:%s, size:%ld\n",filename,sizeof(filename));
     printf("filename sent\n");
 
     int sendfile = open(filename,O_RDONLY);
     if(sendfile<0){
         perror("Open file");
-        exit(1);
+        return 1;
     }
 
     while( (bytesread=read(sendfile,buf,sizeof(buf))) > 0){
         if( write(*fd,buf,sizeof(buf)) < 0 ){
             perror("write file");
-            exit(1);
+            return 1;
         }
     }
     write(*fd,buf,sizeof(buf));
     printf("file sent\n");
     close(sendfile);
     close(*fd);
+    return 0;
 }
