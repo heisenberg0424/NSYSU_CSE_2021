@@ -26,6 +26,4 @@ class Node{
         Node *right;
 };
 
-bool comp(Node a,Node b){
-    return a.frequency<b.frequency;
-}
+bool comp(Node a,Node b);

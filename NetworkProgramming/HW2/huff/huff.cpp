@@ -156,3 +156,6 @@ int huffcode(Node *head, string code){
     return 0;
 }
 
+bool comp(Node a,Node b){
+    return a.frequency<b.frequency;
+}
