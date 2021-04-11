@@ -2,22 +2,29 @@
 #include <cstring>
 #include <cstdio>
 #include <iostream>
-#include <deque>
+#include <queue>
+#include <vector>
 #include <algorithm>
+#include <map>
+#include <bitset>
 using namespace std;
 
 int huff_encode(string path);
 int huff_decode(string path);
 int filefreq(fstream& input,int *table);
+int encodeoutput(fstream &input,fstream &output,map<int,string> &codebook);
 
 class Node{
-    friend bool comp(Node a,Node b); //for frequency compare
-    friend int buildtree(int *table,deque<Node> &tree);
-    friend int hufftree(deque<Node> &tree);
-    friend int huffcode(Node *head, string code);
+    friend int buildtree(int *table, priority_queue<Node*,vector<Node*>,Node> &tree);
+    friend int hufftree( priority_queue<Node*,vector<Node*>,Node> &tree);
+    friend int huffcode(Node* head, string code, map<int,string> &codebook);
     
     public:
+        Node():frequency(0),data(0),code(""),left(NULL),right(NULL){}
         Node(int f,int d):frequency(f),data(d),code(""),left(NULL),right(NULL){}
+        bool operator ()(const Node *a,const Node *b) const{
+            return a->frequency > b->frequency;
+        }
     private:
         int frequency;
         int data;
@@ -26,4 +33,3 @@ class Node{
         Node *right;
 };
 
-bool comp(Node a,Node b);
