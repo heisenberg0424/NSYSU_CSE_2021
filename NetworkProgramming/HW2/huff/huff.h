@@ -11,11 +11,11 @@ using namespace std;
 
 int huff_encode(string path);
 int huff_decode(string path);
-int filefreq(fstream& input,int *table);
-int encodeoutput(fstream &input,fstream &output,map<int,string> &codebook);
+int filefreq(fstream& input,long int *table);
+int encodeoutput(fstream &input,string outputpath,map<int,string> &codebook);
 
 class Node{
-    friend int buildtree(int *table, priority_queue<Node*,vector<Node*>,Node> &tree);
+    friend int buildtree(long int *table, priority_queue<Node*,vector<Node*>,Node> &tree);
     friend int hufftree( priority_queue<Node*,vector<Node*>,Node> &tree);
     friend int huffcode(Node* head, string code, map<int,string> &codebook);
     

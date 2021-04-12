@@ -1,22 +1,25 @@
 #include "huff.h"
 #define DEBUG 1
+#define OFFSET 128 
 using namespace std; 
 
 int huff_encode(string path){
-    fstream input,output;
-    int freqcnt[256]={0};
+    fstream input;
+    long freqcnt[256]={0};
     map<int,string> codebook;
-    string outputpath=path+"-coded";
     priority_queue<Node*,vector<Node*>,Node> tree;
     
-    input.open(path,ios::in|ios::binary);
+    input.open(path.c_str(),ios::in|ios::binary);
     if(!input){
         cout<<"File path doesn't exist\n";
         return -1;
-    }
+    }  
 
     filefreq(input,freqcnt);
     input.close();
+    if(DEBUG){
+        cout<<"COUNT FREQ DONE"<<endl;
+    }
 
     buildtree(freqcnt,tree);
     if(DEBUG){
@@ -33,8 +36,7 @@ int huff_encode(string path){
     }
     
     input.open(path,ios::in|ios::binary);
-    output.open(outputpath,ios::out|ios::trunc|ios::binary);
-    encodeoutput(input,output,codebook);
+    encodeoutput(input,path,codebook);
     if(DEBUG){
         cout<<"OUTPUT FILE DONE"<<endl;
     }
@@ -49,12 +51,12 @@ int huff_encode(string path){
  *  table : frequency table stored in array
  *------------------------------------------------------
  */
-int filefreq(fstream &input,int *table){
+int filefreq(fstream &input,long int *table){
     char temp;
     bool flag=0;
-    input>>noskipws;
-    while(input>>temp){
-        table[(int)temp]+=1;
+    //input>>noskipws;
+    while(input.get(temp)){
+        table[temp+OFFSET]+=1;
         flag=1;
     }
     
@@ -68,7 +70,7 @@ int filefreq(fstream &input,int *table){
         for(int i=0;i<256;i++){
             if(!table[i])
                 continue;
-            cout<<(char)i<<": "<<table[i]<<endl;
+            cout<<i<<": "<<table[i]<<endl;
         }
     }
 
@@ -82,7 +84,7 @@ int filefreq(fstream &input,int *table){
  *  table : frequency table stored in array
  *------------------------------------------------------
  */
-int buildtree(int *table, priority_queue<Node*,vector<Node*>,Node> &tree){
+int buildtree(long int *table, priority_queue<Node*,vector<Node*>,Node> &tree){
     for(int i=0;i<256;i++){
         if(table[i]){
             Node *temp= new Node(table[i],i);
@@ -141,7 +143,7 @@ int huffcode(Node* head, string code,map<int,string> &codebook){
         head->code=code;
         codebook[head->data]=code;
         if(DEBUG){
-            cout<<(char)head->data<<": "<<head->code<<endl;
+            cout<<head->data<<": "<<head->code<<endl;
         }
         return 0;
     }
@@ -162,15 +164,35 @@ int huffcode(Node* head, string code,map<int,string> &codebook){
  *  codebook : huffman code we made for each char byte
 ---------------------------------------------------------------
 */
-int encodeoutput(fstream &input,fstream &output,map<int,string> &codebook){
+int encodeoutput(fstream &input,string outputpath,map<int,string> &codebook){
     char temp;
     unsigned char bitoperate;
     int extrabits,eightbitchar;
-    string binarystring="";
+    string binarystring="",codebookpath,codedpath;
     while(input>>temp){
-        binarystring+=codebook[(int)temp];
+        binarystring+=codebook[temp+OFFSET];
     }
-    
+    fstream output;
+    codebookpath=outputpath+"-codebook";
+    codedpath = outputpath+"-coded";
+
+    output.open(codebookpath.c_str(),ios::out|ios::trunc|ios::binary);
+    if(!output){
+        cout<<"Write code book failed"<<endl;
+    }
+    for(int i=0;i<256;i++){
+        if(codebook.find(i)!=codebook.end()){
+            if(DEBUG)
+                cout<<i<<": "<<codebook[i]<<endl;
+            output<<i-OFFSET<<" "<<codebook[i]<<endl;
+        }
+    }
+    output.close();
+
+    output.open(codedpath.c_str(),ios::out|ios::trunc|ios::binary);
+    if(!output){
+        cout<<"Write coded file failed"<<endl;
+    }
     extrabits=binarystring.length()%8;
     for(int i=0;i<extrabits;i++){
         binarystring+='0';
@@ -181,10 +203,10 @@ int encodeoutput(fstream &input,fstream &output,map<int,string> &codebook){
             bitoperate = binarystring[i+j]-'0';
             eightbitchar+=bitoperate<<7-j;
         }
-        cout<<eightbitchar<<endl;
+        output<<(char)eightbitchar;
     }
 
     input.close();
-    output.close();
+    //output.close();
     return extrabits;
 }
