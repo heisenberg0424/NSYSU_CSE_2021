@@ -10,4 +10,4 @@ main.o: main.cpp
 	g++ -c main.cpp
 
 clean:
-	rm -f *.o main
+	rm -f *.o main *-coded *-codebook

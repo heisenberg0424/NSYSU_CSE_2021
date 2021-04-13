@@ -13,6 +13,8 @@ int huff_encode(string path);
 int huff_decode(string path);
 int filefreq(fstream& input,long int *table);
 int encodeoutput(fstream &input,string outputpath,map<int,string> &codebook);
+int createmap(string path,map<string,int> &codebook);
+int decodedata(string path,map<string,int> &codebook,int extrabit);
 
 class Node{
     friend int buildtree(long int *table, priority_queue<Node*,vector<Node*>,Node> &tree);
