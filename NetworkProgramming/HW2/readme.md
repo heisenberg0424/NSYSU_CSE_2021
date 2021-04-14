@@ -1,11 +1,11 @@
 ## FTP Program with data Compression
 -------
 ### Network Programming HW2
-This is a program that can transfer files using tcp connection.
+This is a C/C++ program that can transfer files using tcp connection.
 ### Commands :
-The link command will connect to server 192.168.0.1 with port 1500
+The link command will connect to server example.com with port 1500
 ```
-$ link 192.168.0.1 1500
+$ link example.com 1500
 ```
 The send command will compress the file first then send to server
 ```
