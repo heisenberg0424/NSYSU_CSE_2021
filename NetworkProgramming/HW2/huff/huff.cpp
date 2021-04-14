@@ -6,7 +6,8 @@ using namespace std;
 
 //ENCODE  
 //***DECODE func in lin 218
-int huff_encode(string path){
+int huff_encode(string path,int *compressedfilesize,int *codebooksize){
+    long long original,compress,book;
     fstream input;
     long freqcnt[256]={0};
     map<int,string> codebook;
@@ -43,6 +44,24 @@ int huff_encode(string path){
     if(ENDEBUG){
         cout<<"OUTPUT FILE DONE"<<endl;
     }
+
+    input.open(path.c_str(),ios::in|ios::binary);
+    input.seekg(0,ios::end);
+    
+    original=input.tellg();
+    input.close();
+    input.open((path+"-coded").c_str(),ios::in|ios::binary);
+    input.seekg(0,ios::end);
+    compress=input.tellg();
+    input.close();
+    input.open((path+"-codebook").c_str(),ios::in|ios::binary);
+    input.seekg(0,ios::end);
+    *codebooksize=input.tellg();
+    input.close();
+    cout<<"Original file length: "<<original<<" bytes"<<endl;
+    cout<<"Compressed file length: "<<compress<<" bytes"<<endl;
+    cout<<"Ratio: "<<(float)compress*100/original<<'%'<<endl;
+    *compressedfilesize=compress;
 
     return 0;
 }
@@ -178,6 +197,7 @@ int encodeoutput(fstream &input,string outputpath,map<int,string> &codebook){
     while(input>>temp){
         binarystring+=codebook[temp+OFFSET];
     }
+    
 
     fstream output;
     codebookpath=outputpath+"-codebook";
@@ -240,12 +260,14 @@ int createmap(string path,map<string,int> &codebook){
     fstream codebookfile;
     int extrabit;
     path+="-codebook";
-    codebookfile.open(path.c_str(),ios::in);
+    codebookfile.open(path.c_str(),ios::in|ios::binary);
     if(!codebookfile){
         cout<<"Fail to open codebook file"<<endl;
         return -1;
     }
-    codebookfile>>extrabit;
+    if(DEDEBUG){
+        cout<<"offset: "<<extrabit<<endl;
+    }
     int tempchar;
     string tempstring;
     while(codebookfile>>tempchar>>tempstring){
@@ -276,8 +298,14 @@ int decodedata(string path,map<string,int> &codebook,int extrabit){
         binarystring.pop_back();
     }
 
+    
+    // fstream debugfile(path+"binarystring",ios::out|ios::trunc);
+    // debugfile<<binarystring;
+    // debugfile.close();
+    
+
     fstream decodefile;
-    path+="done";
+    //path+="done";
     decodefile.open(path.c_str(),ios::out|ios::trunc);
     int i,j;
     for(i=0;i<binarystring.size();i+=j){

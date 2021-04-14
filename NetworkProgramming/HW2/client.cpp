@@ -10,6 +10,8 @@
 #include <unistd.h>
 #include <netinet/in.h>
 #include <errno.h>
+#include "huff/huff.h"
+
 void prompt(){
     printf("[ client@HW2 ]$ ");
 }
@@ -17,6 +19,8 @@ void prompt(){
 int clientlink(int *fd,char *ip,char *port);
 
 int sendfile(int *fd,char *filename);
+
+long long filesize(char *filename);
 
 int main(){
     int fd,linkflag=0;
@@ -89,30 +93,77 @@ int clientlink(int *fd,char *ip,char *port){
 
 int sendfile(int *fd,char *filename){
     int bytesread;
+    int codedsize,codebooksize,filenamelen;
     char buf[512];
+    memset(buf,0,sizeof(buf));
+    huff_encode(filename,&codedsize,&codebooksize);
     
-    if( write(*fd,filename,sizeof(filename)) < 0){
+    if( write(*fd,&codedsize,sizeof(int)) < 0){
+        perror("write filesize");
+        return 1;
+    }
+    printf("filesize1 sent\n");
+    if( write(*fd,&codebooksize,sizeof(int)) < 0){
+        perror("write filesize");
+        return 1;
+    }
+    printf("filesize2 sent\n");
+
+    filenamelen=strlen(filename);
+    if( write(*fd,&filenamelen,sizeof(int)) < 0){
+        perror("write filenamelen");
+        return 1;
+    }
+    printf("filenamelen sent\n");
+    if( write(*fd,filename,(size_t)filenamelen) < 0){
         perror("write filename");
         return 1;
     }
-    //printf("filename:%s, size:%ld\n",filename,sizeof(filename));
-    printf("filename sent\n");
+    printf("filename sent \n");
+    
+    char codedfilepath[128]="";
+    char codebookpath[128]="";
+    strcat(codedfilepath,filename);
+    strcat(codedfilepath,"-coded");
+    strcat(codebookpath,filename);
+    strcat(codebookpath,"-codebook");
 
-    int sendfile = open(filename,O_RDONLY);
+    int sendfile = open(codedfilepath,O_RDONLY);
     if(sendfile<0){
-        perror("Open file");
+        perror("Open coded file");
         return 1;
     }
 
+    memset(buf,0,sizeof(buf));
+    while( (bytesread=read(sendfile,buf,sizeof(buf))) > 0){
+        cout<<"read: "<<bytesread<<endl;
+        if( write(*fd,buf,sizeof(buf)) < 0 ){
+            perror("write file");
+            return 1;
+        }
+        memset(buf,0,sizeof(buf));
+    }
+    printf("Coded file sent\n");
+    close(sendfile);
+
+    sendfile = open(codebookpath,O_RDONLY);
+    if(sendfile<0){
+        perror("Open codebook");
+        return 1;
+    }
+
+    memset(buf,0,sizeof(buf));
     while( (bytesread=read(sendfile,buf,sizeof(buf))) > 0){
         if( write(*fd,buf,sizeof(buf)) < 0 ){
             perror("write file");
             return 1;
         }
+        memset(buf,0,sizeof(buf));
+        cout<<"read: "<<bytesread<<endl;
     }
-    write(*fd,buf,sizeof(buf));
-    printf("file sent\n");
+    printf("Codebook sent\n");
     close(sendfile);
+
     close(*fd);
     return 0;
 }

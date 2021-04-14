@@ -9,7 +9,7 @@
 #include <bitset>
 using namespace std;
 
-int huff_encode(string path);
+int huff_encode(string path,int *compressedfilesize,int *codebooksize);
 int huff_decode(string path);
 int filefreq(fstream& input,long int *table);
 int encodeoutput(fstream &input,string outputpath,map<int,string> &codebook);

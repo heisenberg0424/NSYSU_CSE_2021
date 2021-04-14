@@ -8,9 +8,12 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <arpa/inet.h>
+#include "huff/huff.h"
+using namespace std;
 
 int main(){
     int fd;
+    int codedfilesize,codebooksize,filenamelen;
     struct sockaddr_in srv,cli,clientinfo;
     char clientip[16];
     int clientport;
@@ -53,22 +56,74 @@ int main(){
         char pwd[512]="rev/";
         int nbytes;
         memset(buf,0,sizeof(buf));
-        if( (nbytes = read(newfd,buf,sizeof(buf))) < 0){
+
+        if( (nbytes = read(newfd,&codedfilesize,sizeof(int))) < 0){
+            perror("read filesize");
+            exit(1);
+        }
+        printf("Filesize1 : %d\n",codedfilesize);
+        if( (nbytes = read(newfd,&codebooksize,sizeof(int))) < 0){
+            perror("read filesize");
+            exit(1);
+        }
+        printf("Filesize2 : %d\n",codebooksize);
+        if( (nbytes = read(newfd,&filenamelen,sizeof(int))) < 0){
+            perror("read filesize");
+            exit(1);
+        }
+        printf("Filenamelen : %d\n",filenamelen);
+
+        char filename[filenamelen+1];
+        memset(filename,0,sizeof(filename));
+        if( (nbytes = read(newfd,filename,filenamelen)) < 0){
             perror("read filename");
             exit(1);
         }
-        printf("Filename : %s\n",buf);
+        
+        printf("Filename : %s\n",filename);
 
-        strcat(pwd,buf);
-        int revfile = open(pwd,O_WRONLY|O_CREAT|O_TRUNC,S_IRWXU);
+        strcat(pwd,filename);
+        strcat(pwd,"-coded");
+        int revfile = open(pwd,O_WRONLY|O_CREAT|O_TRUNC,S_IRUSR|S_IWUSR);
 
-        memset(buf,0,sizeof(buf));
-        while(read(newfd,buf,sizeof(buf))>0){
+        int temp;
+       
+        while(codedfilesize>=512){
+            memset(buf,0,sizeof(buf));
+            codedfilesize-=read(newfd,buf,sizeof(buf));
             write(revfile,buf,sizeof(buf));
         }
-        printf("File recieved\n");
+        read(newfd,buf,codedfilesize);
+        write(revfile,buf,codedfilesize);
+        read(newfd,buf,512-codedfilesize);
 
+        printf("coded file recieved\n");
         close(revfile);
+
+        memset(pwd,0,sizeof(pwd));
+        strcat(pwd,"rev/");
+        strcat(pwd,filename);
+        strcat(pwd,"-codebook");
+        revfile = open(pwd,O_WRONLY|O_CREAT|O_TRUNC,S_IRUSR|S_IWUSR);
+        while(codebooksize>=512){
+            memset(buf,0,sizeof(buf));
+            codebooksize-=read(newfd,buf,sizeof(buf));
+            write(revfile,buf,sizeof(buf));
+            cout<<"left: "<<codebooksize<<endl;
+        }
+        memset(buf,0,sizeof(buf));
+        read(newfd,buf,512);
+        cout<<"fIANL "<<buf<<endl;
+        write(revfile,buf,512);
+        printf("code book recieved\n");
+        close(revfile);
+
+        memset(pwd,0,sizeof(pwd));
+        strcat(pwd,"rev/");
+        strcat(pwd,filename);
+        huff_decode(pwd);
+        printf("File decoded\n");
+        
         close(newfd);
     }
     close(fd);
