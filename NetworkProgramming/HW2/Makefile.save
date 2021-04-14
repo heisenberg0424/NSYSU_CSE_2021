@@ -1,5 +1,0 @@
-all: client.c server.c
-	gcc client.c -o client
-	g++forbids converting a string constant to ‘char*’ -o server
-clean:
-	rm -f client server test.txt rev/*

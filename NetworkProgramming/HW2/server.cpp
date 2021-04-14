@@ -24,7 +24,7 @@ int main(){
     //printf("New socket \n");
 
     srv.sin_family = AF_INET;
-    srv.sin_port = htons(1500);
+    srv.sin_port = htons(1500); //port set 1500
     srv.sin_addr.s_addr = htonl(INADDR_ANY);
     if(bind(fd,(struct sockaddr* ) &srv, sizeof(srv))<0){
         perror("bind");
@@ -46,14 +46,13 @@ int main(){
             perror("accept");
             exit(1);
         }
-        //printf("connected\n");
 
-        getpeername(newfd, (struct sockaddr *) &clientinfo,&clientinfo_len);
+        getpeername(newfd, (struct sockaddr *) &clientinfo,&clientinfo_len);    //get client info
         inet_ntop(AF_INET,&clientinfo.sin_addr,clientip,sizeof(clientip));
         clientport = ntohs(clientinfo.sin_port);
         printf("A client \"%s\" has connected via port num %d using SOCKET_STREAM(TCP)\n",clientip,clientport);
         char buf[512];
-        char pwd[512]="rev/";
+        char pwd[512]="rev/";       //recived file will save at rev/ 
         int nbytes;
         memset(buf,0,sizeof(buf));
 

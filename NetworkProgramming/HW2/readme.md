@@ -11,6 +11,10 @@ the send command will compress the file first then send to server
 ```
 $ send sample.txt
 ```
+to switch variable length to fixed length use switch
+```
+$ switch
+```
 leave command will exit the client program
 ```
 $ leave
