@@ -136,7 +136,6 @@ int sendfile(int *fd,char *filename){
 
     memset(buf,0,sizeof(buf));
     while( (bytesread=read(sendfile,buf,sizeof(buf))) > 0){
-        cout<<"read: "<<bytesread<<endl;
         if( write(*fd,buf,sizeof(buf)) < 0 ){
             perror("write file");
             return 1;
@@ -159,7 +158,6 @@ int sendfile(int *fd,char *filename){
             return 1;
         }
         memset(buf,0,sizeof(buf));
-        cout<<"read: "<<bytesread<<endl;
     }
     printf("Codebook sent\n");
     close(sendfile);

@@ -109,12 +109,10 @@ int main(){
             memset(buf,0,sizeof(buf));
             codebooksize-=read(newfd,buf,sizeof(buf));
             write(revfile,buf,sizeof(buf));
-            cout<<"left: "<<codebooksize<<endl;
         }
         memset(buf,0,sizeof(buf));
-        read(newfd,buf,512);
-        cout<<"fIANL "<<buf<<endl;
-        write(revfile,buf,512);
+        read(newfd,buf,codebooksize);
+        write(revfile,buf,codebooksize);
         printf("code book recieved\n");
         close(revfile);
 

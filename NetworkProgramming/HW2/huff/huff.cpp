@@ -265,6 +265,7 @@ int createmap(string path,map<string,int> &codebook){
         cout<<"Fail to open codebook file"<<endl;
         return -1;
     }
+    codebookfile>>extrabit;
     if(DEDEBUG){
         cout<<"offset: "<<extrabit<<endl;
     }
@@ -285,7 +286,7 @@ int decodedata(string path,map<string,int> &codebook,int extrabit){
     char temp;
     string binarystring="";
     string codedpath=path+"-coded";
-    codedfile.open(codedpath.c_str(),ios::in);
+    codedfile.open(codedpath.c_str(),ios::in|ios::binary);
     if(!codedfile){
         cout<<"Fail to open coded file"<<endl;
         return -1;
