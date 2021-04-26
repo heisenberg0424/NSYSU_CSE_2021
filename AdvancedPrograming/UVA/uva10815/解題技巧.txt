@@ -1,0 +1,3 @@
+使用STL裡的set可以完美解決本題的條件，只是要注意題目中如果有符號，要分為兩個不同的字
+eg : pre-order -> pre order
+     don't -> don t
