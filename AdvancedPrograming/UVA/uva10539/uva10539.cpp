@@ -3,10 +3,12 @@
 #include <vector>
 #include <cstring>
 #include <set>
+#include <cmath>
 using namespace std;
 
 int main(){
     set<long long> table;
+    long long temp;
     vector<bool> prime;
     prime.resize(1000002);
     fill(prime.begin(), prime.end(), 0);
@@ -19,11 +21,11 @@ int main(){
     }
     for(int i=2; i<prime.size(); i++){
         if(prime[i]==0){
-            long long temp = i*i;
+            int powcnt=2;
+            temp = pow(i,powcnt++);
             while(temp<1000000000000 && temp >0){
-                //cout<<"i: "<<i<<" temp: "<<temp<<endl;
                 table.insert(temp);
-                temp*=i;
+                temp = pow(i,powcnt++);
             }
         }
     }
@@ -38,23 +40,23 @@ int main(){
         long long tt;
         cin>>low>>high;
         for(const auto a:table){
-            cout<<"table: "<<a<<endl;
+            //cout<<"table: "<<a<<endl;
             if(flag){
                 if(a>high){
-                    cout<<"End "<<a<<endl;
+                    //cout<<"End "<<a<<endl;
                     break;
                 }
                 ans++;
                 continue;
             }
-            if(a>=low){
-                cout<<"found "<<a<<endl;
+            if(a>=low && a<high){
+                //cout<<"found "<<a<<endl;
                 flag=1;
                 ans++;
             }
             
         }
-        cout<<ans<<endl<<tt<<endl;
+        cout<<ans<<endl;
     }
 }
     
