@@ -12,6 +12,7 @@
 #include <errno.h>
 #include <string>
 #include <iostream>
+#define DEBUG 1
 using namespace std;
 
 int clientlink(int *fd,char *ip,char *port);
@@ -19,14 +20,31 @@ int clientlink(int *fd,char *ip,char *port);
 
 int main(){
     int clientfd,i,j;
-    char buf[512];
+    char buf[512],ip[128],port[8],username[16]="Eric";
     string input;
-    clientlink(&clientfd,"192.168.50.11","3000");
     fd_set master,read_fds;
     FD_ZERO(&master);
     FD_ZERO(&read_fds);
-    FD_SET(clientfd,&master);
     FD_SET(0,&master);
+
+    cout<<"         Welcome back!"<<endl;
+    cout<<"-------------------------------"<<endl;
+    cout<<"Login to server"<<endl;
+    cout<<"IP: ";
+    //cin>>ip;
+    cout<<"Port: ";
+    //cin>>port;
+    cout<<"User name: ";
+    //cin>>username;
+
+    if(DEBUG){
+        cout<<ip<<":"<<port<<"  "<<username<<endl;
+    }
+    clientlink(&clientfd,"192.168.50.11","3000");
+    send(clientfd,username,sizeof(username),0);
+    //clientlink(&clientfd,ip,port);
+    FD_SET(clientfd,&master);
+    
     while(1){
         read_fds=master;
         select(clientfd+1,&read_fds,NULL,NULL,NULL);
@@ -37,7 +55,7 @@ int main(){
         }
         else if(FD_ISSET(clientfd,&read_fds)){
             recv(clientfd,buf,sizeof(buf),0);
-            cout<<"Message income: "<<buf<<endl;
+            cout<<"<"<<buf<<">"<<endl;
         }
         else{
             perror("unknown fd");

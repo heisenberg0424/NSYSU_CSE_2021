@@ -7,22 +7,19 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
-
+#include <unordered_map>
+#include <iostream>
 #define PORT "3000"
 
-void *get_in_addr(struct sockaddr *sa){
-    if(sa->sa_family == AF_INET){
-        return &(((struct sockaddr_in*)sa)->sin_addr);
-    }
+using namespace std;
 
-    return &(((struct sockaddr_in6 *)sa)->sin6_addr);
-}
+fd_set master,read_fds;
+int listenfd,fdmax,newfd;
+
+void *get_in_addr(struct sockaddr *sa);
+void broadcast(char *name,char *ip);
 
 int main(){
-    fd_set master,read_fds;
-    int fdmax;
-    int listenfd;
-    int newfd;
     struct sockaddr_storage remoteaddr; //client address
     socklen_t addrlen;
 
@@ -34,6 +31,10 @@ int main(){
     int i,j,serverinfo;
 
     struct addrinfo hints,*ai,*p;
+
+    unordered_map<string,int> userfd;
+    unordered_map<string,bool> offlinemessage;
+    unordered_map<string,string> message;
 
     //init fd sets
     FD_ZERO(&master);
@@ -69,6 +70,7 @@ int main(){
         perror("listen");
         exit(1);
     }
+    cout<<"Server listening on 192.168.50.11:3000"<<endl;
 
     FD_SET(listenfd,&master);
     fdmax = listenfd;
@@ -86,7 +88,6 @@ int main(){
                 if(i==listenfd){    //new connection
                     addrlen  = sizeof(remoteaddr);
                     newfd = accept(listenfd,(struct sockaddr *)&remoteaddr,&addrlen);
-
                     if(newfd == -1){
                         perror("accept");
                         exit(1);
@@ -95,8 +96,11 @@ int main(){
                         if(newfd>fdmax){
                             fdmax = newfd;
                         }
-                        printf("selectserver: new connection from %s on socket %d\n",\
-                        inet_ntop(remoteaddr.ss_family,get_in_addr((struct sockaddr*)&remoteaddr),remoteIP,INET6_ADDRSTRLEN),newfd);
+                        inet_ntop(remoteaddr.ss_family,get_in_addr((struct sockaddr*)&remoteaddr),remoteIP,INET6_ADDRSTRLEN);
+                        recv(newfd,buf,sizeof(buf),0);
+                        printf("selectserver: new connection from %s on socket %d Username: %s\n",remoteIP,newfd,buf);
+                        broadcast(buf,remoteIP);
+                        
                     }
                 }
 
@@ -126,6 +130,29 @@ int main(){
                         }
                     }
                 }
+            }
+        }
+    }
+}
+
+void *get_in_addr(struct sockaddr *sa){
+    if(sa->sa_family == AF_INET){
+        return &(((struct sockaddr_in*)sa)->sin_addr);
+    }
+
+    return &(((struct sockaddr_in6 *)sa)->sin6_addr);
+}
+
+void broadcast(char *name,char *ip){
+    char buf[512]="User ";
+    strcat(buf,name);
+    strcat(buf," is online,IP address:");
+    strcat(buf,ip);
+    for(int i=0;i<=fdmax;i++){
+        if(FD_ISSET(i,&master) && i!=newfd && i!=listenfd){
+            if(send(i,buf,sizeof(buf),0) <0 ){
+                perror("broadcast");
+                exit(1);
             }
         }
     }
