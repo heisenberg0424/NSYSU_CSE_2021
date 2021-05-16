@@ -16,15 +16,11 @@ int main(){
                     flag=0;
                     continue;
                 }
-                if(head==input.length()-1){
-                    input.push_back('-');
-                }else{
-                    input[head-1]='-';
-                }
-                for(j=head;j>=tail;j--){
+                input[i]='+';
+                for(j=tail;j<head;j++){
                     input[j]='0';
                 }
-                input[i]='+';
+                input[head]='-';
                 flag=0;
             }
                 
@@ -40,17 +36,12 @@ int main(){
             }
         }
 
-        if(flag&&tail!=head){
-            if(head==input.length()-1){
-                input.push_back('-');
-            }else{
-                input[head-1]='-';
-            }
-            for(j=head;j>=tail;j--){
+        if(flag&&tail!=head&&input.length()!=2){
+            for(j=tail;j<head;j++){
                 input[j]='0';
             }
+            input[head]='-';
             input='+'+input;
-            flag=0;
         }
 
         for(i=0;i<input.length();i++){
