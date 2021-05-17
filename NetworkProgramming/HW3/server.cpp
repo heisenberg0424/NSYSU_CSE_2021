@@ -124,12 +124,12 @@ int main(){
                         close(i);
                         FD_CLR(i,&master);
                     }
-                    else{
-                            
+                    else{   
+                            tmp=buf;
                             while(1){
                                 name="";
                                 msg="";
-                                tmp=buf;
+                                
                                 if(tmp=="")
                                     break;
                                 j=0;
@@ -140,22 +140,22 @@ int main(){
                                 j++;
                                 while(tmp[j]!='\"'){
                                     msg+=tmp[j];
+                                    j++;
                                 }
                                 dest = user2fd[name];
                                 if(DEBUG){
                                     cout<<"Sending : "<<dest<<" :"<<msg<<endl;
                                 }
                                 unicast(i,dest,msg.c_str());
-                                tmp.erase(0,j);
+                                tmp.erase(0,j+1);
                             }
                             
                         }
                         
-                    }
                 }
-            }
         }
     }
+}
 }
 
 void *get_in_addr(struct sockaddr *sa){
