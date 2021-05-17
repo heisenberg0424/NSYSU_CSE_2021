@@ -12,6 +12,7 @@
 #include <errno.h>
 #include <string>
 #include <iostream>
+#include <vector>
 #define DEBUG 1
 using namespace std;
 
@@ -20,7 +21,7 @@ int clientlink(int *fd,char *ip,char *port);
 
 int main(){
     int clientfd,i,j;
-    char buf[512],ip[128],port[8],username[16]="Eric";
+    char buf[512],ip[128],port[8],username[16];
     string input;
     fd_set master,read_fds;
     FD_ZERO(&master);
@@ -35,7 +36,7 @@ int main(){
     cout<<"Port: ";
     //cin>>port;
     cout<<"User name: ";
-    //cin>>username;
+    cin>>username;
 
     if(DEBUG){
         cout<<ip<<":"<<port<<"  "<<username<<endl;
@@ -50,8 +51,35 @@ int main(){
         select(clientfd+1,&read_fds,NULL,NULL,NULL);
         if(FD_ISSET(0,&read_fds)){
             cin>>input;
-            send(clientfd,input.c_str(),sizeof(input),0);
-            cout<<"Message sent"<<endl;
+            if(input=="bye"){
+                close(clientfd);
+                cout<<"Logged out\n";
+                return 0;
+            }
+            
+            if(input=="send"){
+                vector<string> destname;
+                cin>>input;
+                while(input[0]!='\"'){
+                    destname.push_back(input);
+                    cin>>input;
+                }
+                for(i=0;i<destname.size();i++){
+                    if(send(clientfd,destname[i].c_str(),sizeof(destname[i]),0)<0){
+                        perror("sendname");
+                        exit(1);
+                    }
+                    if(send(clientfd,input.c_str(),sizeof(input),0)<0){
+                        perror("sendmessage");
+                        exit(1);
+                    }
+                    if(DEBUG){
+                        cout<<"Sent "<<destname[i]<<"Size: "<<sizeof(destname[i])<<endl;
+                        cout<<"Sent "<<input<<"Size: "<<sizeof(input)<<endl;
+                    }
+                }
+            }
+
         }
         else if(FD_ISSET(clientfd,&read_fds)){
             recv(clientfd,buf,sizeof(buf),0);

@@ -9,22 +9,29 @@
 #include <netdb.h>
 #include <unordered_map>
 #include <iostream>
+#include <ctime>
 #define PORT "3000"
+#define DEBUG 1
 
 using namespace std;
 
 fd_set master,read_fds;
 int listenfd,fdmax,newfd;
+unordered_map<string,int> user2fd;
+unordered_map<int,string> fd2user;
+unordered_map<string,bool> offlinemessage;
+unordered_map<string,string> message;
 
 void *get_in_addr(struct sockaddr *sa);
-void broadcast(char *name,char *ip);
+void broadcast(int src,const char *name,const char *ip,bool online);
+void unicast(int src,int dest,const char *msg);
 
 int main(){
     struct sockaddr_storage remoteaddr; //client address
     socklen_t addrlen;
 
     char buf[512];
-    int nbytes;
+    int nbytes,src,dest;
 
     char remoteIP[INET6_ADDRSTRLEN];
     int yes = 1; //for reuse address
@@ -32,9 +39,7 @@ int main(){
 
     struct addrinfo hints,*ai,*p;
 
-    unordered_map<string,int> userfd;
-    unordered_map<string,bool> offlinemessage;
-    unordered_map<string,string> message;
+    
 
     //init fd sets
     FD_ZERO(&master);
@@ -99,8 +104,9 @@ int main(){
                         inet_ntop(remoteaddr.ss_family,get_in_addr((struct sockaddr*)&remoteaddr),remoteIP,INET6_ADDRSTRLEN);
                         recv(newfd,buf,sizeof(buf),0);
                         printf("selectserver: new connection from %s on socket %d Username: %s\n",remoteIP,newfd,buf);
-                        broadcast(buf,remoteIP);
-                        
+                        broadcast(newfd,buf,remoteIP,1);
+                        fd2user[newfd]=buf;
+                        user2fd[buf]=newfd;
                     }
                 }
 
@@ -109,6 +115,7 @@ int main(){
                         if(nbytes == 0){
                             //close fd
                             printf("selectserver: socket %d hung up\n",i);
+                            broadcast(i,fd2user[i].c_str(),NULL,0);
                         }
                         else{
                             perror("recv");
@@ -117,17 +124,14 @@ int main(){
                         FD_CLR(i,&master);
                     }
                     else{
-                        for(j=0;j<=fdmax;j++){
-                            if(FD_ISSET(j,&master)){
-                                if(j != listenfd && j != i){
-                                    //don't brocast to listenfd and sender
-                                    if(send(j,buf,sizeof(buf),0)==-1){
-                                        perror("send");
-                                    }
+                        dest = user2fd[buf];
+                        recv(i,buf,sizeof(buf),0);
 
-                                }
-                            }
+                        if(DEBUG){
+                            cout<<"recvedfrom : "<<dest<<" :"<<buf<<endl;
                         }
+
+                        unicast(i,dest,buf);
                     }
                 }
             }
@@ -143,17 +147,41 @@ void *get_in_addr(struct sockaddr *sa){
     return &(((struct sockaddr_in6 *)sa)->sin6_addr);
 }
 
-void broadcast(char *name,char *ip){
+void broadcast(int src,const char *name,const char *ip,bool online){
     char buf[512]="User ";
     strcat(buf,name);
-    strcat(buf," is online,IP address:");
-    strcat(buf,ip);
+    if(online){
+        strcat(buf," is online,IP address:");
+        strcat(buf,ip);
+    }
+    else{
+        strcat(buf," is offline.");
+    }
+    
     for(int i=0;i<=fdmax;i++){
-        if(FD_ISSET(i,&master) && i!=newfd && i!=listenfd){
+        if(FD_ISSET(i,&master) && i!=src && i!=listenfd){
             if(send(i,buf,sizeof(buf),0) <0 ){
                 perror("broadcast");
                 exit(1);
             }
         }
     }
+}
+
+void unicast(int src,int dest,const char *msg){
+    char buf[512]="User ";
+    time_t curtime;
+    time(&curtime);
+
+    strcat(buf,fd2user[src].c_str());
+    strcat(buf," has sent you a message \"");
+    strcat(buf,msg);
+    strcat(buf,"\" at ");
+    strcat(buf,ctime(&curtime));
+
+    if(send(dest,buf,sizeof(buf),0) <0 ){
+        perror("unicast");
+        exit(1);
+    }
+
 }
