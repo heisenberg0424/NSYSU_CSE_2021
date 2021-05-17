@@ -36,6 +36,7 @@ int main(){
     char remoteIP[INET6_ADDRSTRLEN];
     int yes = 1; //for reuse address
     int i,j,serverinfo;
+    string msg,name,tmp;
 
     struct addrinfo hints,*ai,*p;
 
@@ -124,14 +125,32 @@ int main(){
                         FD_CLR(i,&master);
                     }
                     else{
-                        dest = user2fd[buf];
-                        recv(i,buf,sizeof(buf),0);
-
-                        if(DEBUG){
-                            cout<<"recvedfrom : "<<dest<<" :"<<buf<<endl;
+                            
+                            while(1){
+                                name="";
+                                msg="";
+                                tmp=buf;
+                                if(tmp=="")
+                                    break;
+                                j=0;
+                                while(tmp[j]!='\"'){
+                                    name+=tmp[j];
+                                    j++;
+                                }
+                                j++;
+                                while(tmp[j]!='\"'){
+                                    msg+=tmp[j];
+                                }
+                                dest = user2fd[name];
+                                if(DEBUG){
+                                    cout<<"Sending : "<<dest<<" :"<<msg<<endl;
+                                }
+                                unicast(i,dest,msg.c_str());
+                                tmp.erase(0,j);
+                            }
+                            
                         }
-
-                        unicast(i,dest,buf);
+                        
                     }
                 }
             }
@@ -174,9 +193,9 @@ void unicast(int src,int dest,const char *msg){
     time(&curtime);
 
     strcat(buf,fd2user[src].c_str());
-    strcat(buf," has sent you a message \"");
+    strcat(buf," has sent you a message ");
     strcat(buf,msg);
-    strcat(buf,"\" at ");
+    strcat(buf," at ");
     strcat(buf,ctime(&curtime));
 
     if(send(dest,buf,sizeof(buf),0) <0 ){

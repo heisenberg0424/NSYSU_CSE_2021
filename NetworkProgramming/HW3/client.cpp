@@ -65,17 +65,17 @@ int main(){
                     cin>>input;
                 }
                 for(i=0;i<destname.size();i++){
-                    if(send(clientfd,destname[i].c_str(),sizeof(destname[i]),0)<0){
+                    if(send(clientfd,destname[i].c_str(),destname[i].size(),0)<0){
                         perror("sendname");
                         exit(1);
                     }
-                    if(send(clientfd,input.c_str(),sizeof(input),0)<0){
+                    if(send(clientfd,input.c_str(),input.size(),0)<0){
                         perror("sendmessage");
                         exit(1);
                     }
                     if(DEBUG){
-                        cout<<"Sent "<<destname[i]<<"Size: "<<sizeof(destname[i])<<endl;
-                        cout<<"Sent "<<input<<"Size: "<<sizeof(input)<<endl;
+                        cout<<"Sent "<<destname[i]<<"Size: "<<destname[i].size()<<endl;
+                        cout<<"Sent "<<input<<"Size: "<<input.size()<<endl;
                     }
                 }
             }
