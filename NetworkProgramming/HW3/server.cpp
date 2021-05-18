@@ -11,7 +11,7 @@
 #include <iostream>
 #include <ctime>
 #define PORT "3000"
-#define DEBUG 1
+#define DEBUG 0
 
 using namespace std;
 
@@ -38,6 +38,7 @@ int main(){
     int yes = 1; //for reuse address
     int i,j,serverinfo;
     string msg,name,tmp;
+    name=msg="";
 
     struct addrinfo hints,*ai,*p;
 
@@ -112,10 +113,11 @@ int main(){
                         onlineuser[buf]=1;
 
                         if(offlinemessage[buf]==1){
-                            cout<<"Senbding offiline message"<<endl;
+                            cout<<"Sending offiline message"<<endl;
                             send(newfd,message[buf].c_str(),message[buf].length(),0);
                         }
                         memset(buf,0,sizeof(buf));
+                        offlinemessage[buf]=0;
 
                     }
                 }
@@ -144,7 +146,6 @@ int main(){
                             while(1){
                                 name="";
                                 msg="";
-                                
                                 if(tmp=="")
                                     break;
                                 j=0;
@@ -158,7 +159,7 @@ int main(){
                                     j++;
                                 }
                                 if(DEBUG){
-                                    cout<<"Sending : "<<"Name: "<<" :"<<msg<<endl;
+                                    cout<<"Sending : "<<"Name: "<<name<<" :"<<msg<<endl;
                                 }
                                 unicast(i,name.c_str(),msg.c_str());
                                 tmp.erase(0,j+1);
@@ -210,23 +211,34 @@ void unicast(int src,const char *destname,const char *msg){
     if(onlineuser.find(destname) == onlineuser.end()){
         strcat(buf,destname);
         strcat(buf," does not exit.\n");
-    }
-    else if (onlineuser[destname]==0){
-        strcat(buf,destname);
-        strcat(buf," is off-line.The message will bw passed when he comes back.\n");
-        offlinemessage[destname]=1;
-        message[destname]=buf;
+
+        if(send(src,buf,sizeof(buf),0) <0 ){
+            perror("unicast");
+            exit(1);
+        }
         return;
     }
-    else{
-        strcat(buf,fd2user[src].c_str());
-        strcat(buf," has sent you a message \"");
-        strcat(buf,msg);
-        strcat(buf,"\" at ");
-        strcat(buf,ctime(&curtime));
-    }
     
+    strcat(buf,fd2user[src].c_str());
+    strcat(buf," has sent you a message \"");
+    strcat(buf,msg);
+    strcat(buf,"\" at ");
+    strcat(buf,ctime(&curtime));
 
+    if (onlineuser[destname]==0){
+        offlinemessage[destname]=1;
+        message[destname]=buf;
+        memset(buf,0,sizeof(buf));
+        strcpy(buf,"User ");
+        strcat(buf,destname);
+        strcat(buf," is off-line.The message will be passed when he comes back.\n");
+        if(send(src,buf,sizeof(buf),0) <0 ){
+            perror("unicast");
+            exit(1);
+        }
+        return;
+    }
+        
     if(send(user2fd[destname],buf,sizeof(buf),0) <0 ){
         perror("unicast");
         exit(1);

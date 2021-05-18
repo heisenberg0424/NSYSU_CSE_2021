@@ -13,7 +13,7 @@
 #include <string>
 #include <iostream>
 #include <vector>
-#define DEBUG 1
+#define DEBUG 0
 using namespace std;
 
 int clientlink(int *fd,char *ip,char *port);
@@ -32,18 +32,19 @@ int main(){
     cout<<"-------------------------------"<<endl;
     cout<<"Login to server"<<endl;
     cout<<"IP: ";
-    //cin>>ip;
+    cin>>ip;
     cout<<"Port: ";
-    //cin>>port;
+    cin>>port;
     cout<<"User name: ";
     cin>>username;
 
     if(DEBUG){
         cout<<ip<<":"<<port<<"  "<<username<<endl;
     }
-    clientlink(&clientfd,"192.168.50.11","3000");
+    //clientlink(&clientfd,"192.168.50.11","3000");
+    
+    clientlink(&clientfd,ip,port);
     send(clientfd,username,sizeof(username),0);
-    //clientlink(&clientfd,ip,port);
     FD_SET(clientfd,&master);
     
     while(1){
@@ -66,25 +67,24 @@ int main(){
                 }
                 getline(cin,tmp);
                 input+=tmp;
-                
+                tmp="";
                 for(i=0;i<destname.size();i++){
-                    if(send(clientfd,destname[i].c_str(),destname[i].size(),0)<0){
-                        perror("sendname");
-                        exit(1);
-                    }
-                    if(send(clientfd,input.c_str(),input.size(),0)<0){
-                        perror("sendmessage");
-                        exit(1);
-                    }
+                    tmp+=destname[i];
+                    tmp+=input;
+                }
+                if(send(clientfd,tmp.c_str(),tmp.size(),0)<0){
+                    perror("sendname");
+                    exit(1);
                 }
             }
 
         }
         else if(FD_ISSET(clientfd,&read_fds)){
             recv(clientfd,buf,sizeof(buf),0);
-            cout<<"------------------------------------------------------------"<<endl;
+            cout<<"---------------------------------------------------------------------------"<<endl;
             cout<<buf;
-            cout<<"------------------------------------------------------------"<<endl;
+            cout<<"---------------------------------------------------------------------------"<<endl;
+            cout<<endl;
         }
         else{
             perror("unknown fd");
