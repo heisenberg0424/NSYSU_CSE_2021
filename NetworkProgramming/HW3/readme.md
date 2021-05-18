@@ -29,3 +29,7 @@ The "bye" command will logout the server, and other online users will recieve th
 User Admin is off-line.
 ```
 
+### TODO:
+- Cleaner code
+- Other methods to implement server e.g. multi-thread,multi-process
+

@@ -113,7 +113,7 @@ int main(){
                         onlineuser[buf]=1;
 
                         if(offlinemessage[buf]==1){
-                            cout<<"Sending offiline message"<<endl;
+                            //cout<<"Sending offiline message"<<endl;
                             send(newfd,message[buf].c_str(),message[buf].length(),0);
                         }
                         memset(buf,0,sizeof(buf));
