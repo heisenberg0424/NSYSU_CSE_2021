@@ -108,6 +108,7 @@ int main(){
                         broadcast(newfd,buf,remoteIP,1);
                         fd2user[newfd]=buf;
                         user2fd[buf]=newfd;
+                        memset(buf,0,sizeof(buf));
                     }
                 }
 
@@ -126,6 +127,11 @@ int main(){
                     }
                     else{   
                             tmp=buf;
+                            memset(buf,0,sizeof(buf));
+                            if(DEBUG){
+                                cout<<"received: "<<tmp<<endl;
+                            }
+                            
                             while(1){
                                 name="";
                                 msg="";

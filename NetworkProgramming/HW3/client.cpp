@@ -76,10 +76,6 @@ int main(){
                         perror("sendmessage");
                         exit(1);
                     }
-                    if(DEBUG){
-                        cout<<"Sent "<<destname[i]<<"Size: "<<destname[i].size()<<endl;
-                        cout<<"Sent "<<input<<"Size: "<<input.size()<<endl;
-                    }
                 }
             }
 
