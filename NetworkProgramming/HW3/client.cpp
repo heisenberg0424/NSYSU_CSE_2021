@@ -22,7 +22,7 @@ int clientlink(int *fd,char *ip,char *port);
 int main(){
     int clientfd,i,j;
     char buf[512],ip[128],port[8],username[16];
-    string input;
+    string input,tmp;
     fd_set master,read_fds;
     FD_ZERO(&master);
     FD_ZERO(&read_fds);
@@ -64,6 +64,9 @@ int main(){
                     destname.push_back(input);
                     cin>>input;
                 }
+                getline(cin,tmp);
+                input+=tmp;
+                
                 for(i=0;i<destname.size();i++){
                     if(send(clientfd,destname[i].c_str(),destname[i].size(),0)<0){
                         perror("sendname");
