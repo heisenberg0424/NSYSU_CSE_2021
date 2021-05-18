@@ -19,12 +19,13 @@ fd_set master,read_fds;
 int listenfd,fdmax,newfd;
 unordered_map<string,int> user2fd;
 unordered_map<int,string> fd2user;
+unordered_map<string,bool> onlineuser;
 unordered_map<string,bool> offlinemessage;
 unordered_map<string,string> message;
 
 void *get_in_addr(struct sockaddr *sa);
 void broadcast(int src,const char *name,const char *ip,bool online);
-void unicast(int src,int dest,const char *msg);
+void unicast(int src,const char *destname,const char *msg);
 
 int main(){
     struct sockaddr_storage remoteaddr; //client address
@@ -108,7 +109,14 @@ int main(){
                         broadcast(newfd,buf,remoteIP,1);
                         fd2user[newfd]=buf;
                         user2fd[buf]=newfd;
+                        onlineuser[buf]=1;
+
+                        if(offlinemessage[buf]==1){
+                            cout<<"Senbding offiline message"<<endl;
+                            send(newfd,message[buf].c_str(),message[buf].length(),0);
+                        }
                         memset(buf,0,sizeof(buf));
+
                     }
                 }
 
@@ -118,6 +126,7 @@ int main(){
                             //close fd
                             printf("selectserver: socket %d hung up\n",i);
                             broadcast(i,fd2user[i].c_str(),NULL,0);
+                            onlineuser[fd2user[i]]=0;
                         }
                         else{
                             perror("recv");
@@ -148,11 +157,10 @@ int main(){
                                     msg+=tmp[j];
                                     j++;
                                 }
-                                dest = user2fd[name];
                                 if(DEBUG){
-                                    cout<<"Sending : "<<dest<<" :"<<msg<<endl;
+                                    cout<<"Sending : "<<"Name: "<<" :"<<msg<<endl;
                                 }
-                                unicast(i,dest,msg.c_str());
+                                unicast(i,name.c_str(),msg.c_str());
                                 tmp.erase(0,j+1);
                             }
                             
@@ -178,9 +186,10 @@ void broadcast(int src,const char *name,const char *ip,bool online){
     if(online){
         strcat(buf," is online,IP address:");
         strcat(buf,ip);
+        strcat(buf,"\n");
     }
     else{
-        strcat(buf," is offline.");
+        strcat(buf," is offline.\n");
     }
     
     for(int i=0;i<=fdmax;i++){
@@ -193,18 +202,32 @@ void broadcast(int src,const char *name,const char *ip,bool online){
     }
 }
 
-void unicast(int src,int dest,const char *msg){
+void unicast(int src,const char *destname,const char *msg){
     char buf[512]="User ";
     time_t curtime;
     time(&curtime);
 
-    strcat(buf,fd2user[src].c_str());
-    strcat(buf," has sent you a message ");
-    strcat(buf,msg);
-    strcat(buf," at ");
-    strcat(buf,ctime(&curtime));
+    if(onlineuser.find(destname) == onlineuser.end()){
+        strcat(buf,destname);
+        strcat(buf," does not exit.\n");
+    }
+    else if (onlineuser[destname]==0){
+        strcat(buf,destname);
+        strcat(buf," is off-line.The message will bw passed when he comes back.\n");
+        offlinemessage[destname]=1;
+        message[destname]=buf;
+        return;
+    }
+    else{
+        strcat(buf,fd2user[src].c_str());
+        strcat(buf," has sent you a message \"");
+        strcat(buf,msg);
+        strcat(buf,"\" at ");
+        strcat(buf,ctime(&curtime));
+    }
+    
 
-    if(send(dest,buf,sizeof(buf),0) <0 ){
+    if(send(user2fd[destname],buf,sizeof(buf),0) <0 ){
         perror("unicast");
         exit(1);
     }

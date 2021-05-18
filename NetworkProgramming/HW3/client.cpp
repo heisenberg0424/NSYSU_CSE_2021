@@ -82,7 +82,9 @@ int main(){
         }
         else if(FD_ISSET(clientfd,&read_fds)){
             recv(clientfd,buf,sizeof(buf),0);
-            cout<<buf<<endl;
+            cout<<"------------------------------------------------------------"<<endl;
+            cout<<buf;
+            cout<<"------------------------------------------------------------"<<endl;
         }
         else{
             perror("unknown fd");
