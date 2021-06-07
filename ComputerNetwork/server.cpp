@@ -9,12 +9,16 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #include <ctime>
+#include <cmath>
+#include <fstream>
 #define MSS 1000
 #define PORT 3000
 #define DEBUG 1
 #define ACK 1
 #define SYN 4 
 #define DNS 1
+#define MATH 2
+#define FILE 3
 using namespace std;
 
 typedef struct segment{
@@ -29,8 +33,7 @@ typedef struct segment{
     int mode;
 }pkt;
 
-void test(int func,const char* errormsg);
-int dns(pkt request);
+
 
 
 
@@ -39,10 +42,20 @@ pkt recvPkt,sendPkt;
 struct sockaddr_in srv,cli;
 socklen_t clilen = sizeof(cli);
 
+void test(int func,const char* errormsg);
+int dns(pkt request);
+int math(pkt request);
+int file(pkt request);
+int filesize(const char *filename);
+
+void pktClear(){
+    memset(&recvPkt,0,sizeof(recvPkt));
+    memset(&sendPkt,0,sizeof(sendPkt));
+}
+
 int main(){
     srand(time(NULL));
     int nbytes;
-    
     
     memset(&recvPkt,0,sizeof(recvPkt));
     memset(&sendPkt,0,sizeof(sendPkt));
@@ -77,10 +90,15 @@ int main(){
             case DNS:
                 dns(recvPkt);
                 break;
+            case MATH:
+                math(recvPkt);
+                break;
+            case FILE:
+                file(recvPkt);
+                break;
         }
 
-        memset(&recvPkt,0,sizeof(recvPkt));
-        memset(&sendPkt,0,sizeof(sendPkt));
+        pktClear();
 
     }
 
@@ -108,6 +126,94 @@ int dns(pkt request){
 
     memset(&sendPkt,0,sizeof(sendPkt));
     return 0;
+}
+
+int math(pkt request){
+    pktClear();
+    int i;
+    string symbol="",split="";
+    float x,y,ans;
+
+    for(i=0;i<MSS;i++){
+        if(request.data[i]!=' '){
+            symbol+= request.data[i];
+        }
+        else{
+            i++;
+            break;
+        }
+    }
+
+    for(i;i<MSS;i++){
+        if(request.data[i]=='\0'){
+            i=MSS;
+            x = stof(split);
+            split = "";
+            break;
+        }
+        else if(request.data[i]!=' '){
+            split+= request.data[i];
+        }
+        else{
+            i++;
+            x = stof(split);
+            split = "";
+            break;
+        }
+    }
+
+    for(i;i<MSS;i++){
+        if(request.data[i]!='\0'){
+            split+= request.data[i];
+        }
+        else{
+            i++;
+            y = stof(split);
+            split = "";
+            break;
+        }
+    }
+
+    cout<<"Calcualting function: "<<symbol<<", x = "<<x<<", y = "<<y<<endl;
+
+    if(symbol=="add"){
+        ans = x+y;
+    }
+    if(symbol=="sub"){
+        ans = x-y;
+    }
+    if(symbol=="mul"){
+        ans = x*y;
+    }
+    if(symbol=="divide"){
+        ans = x/y;
+    }
+    if(symbol=="power"){
+        ans = pow(x,y);
+    }
+    if(symbol=="sqrt"){
+        ans = sqrt(x);
+    }
+
+    cout<<"Sending result back..."<<endl;
+    strcpy(sendPkt.data,to_string(ans).c_str());
+    sendPkt.mode = MATH;
+    sendto(fd,&sendPkt,sizeof(sendPkt),0,(struct sockaddr*) &cli,sizeof(cli));
+    pktClear();
+    
+    return 0;
+}
+
+int file(pkt request){
+    
+}
+
+int filesize(const char *filename){
+    int size;
+    ifstream cnt(filename,ios::in|ios::binary);
+    cnt.seekg(0,ios::end);
+    size=cnt.tellg();
+    return size;
 }
 
 void test(int func,const char* errormsg){

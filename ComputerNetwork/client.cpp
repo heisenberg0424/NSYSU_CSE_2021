@@ -16,6 +16,7 @@
 #define ACK 1
 #define SYN 4
 #define DNS 1
+#define MATH 2
 using namespace std;
 
 void test(int func,const char* errormsg);
@@ -36,6 +37,7 @@ class TCP{
 public:
     int handshake();
     int dns(string website);
+    int math(string function);
     TCP();
     ~TCP(){}
 private:
@@ -44,6 +46,10 @@ private:
     int fd;
     struct sockaddr_in srv;
     socklen_t srvlen;
+    void pktClear(){
+        memset(&sendPkt,0,sizeof(sendPkt));
+        memset(&recvPkt,0,sizeof(recvPkt));
+    }
 };
 
 TCP::TCP(){
@@ -81,8 +87,7 @@ int TCP::handshake(){
 }
 
 int TCP::dns(string website){
-    memset(&sendPkt,0,sizeof(sendPkt));
-    memset(&recvPkt,0,sizeof(recvPkt));
+    pktClear();
 
     sendPkt.mode = DNS;
     strcpy(sendPkt.data,website.c_str());
@@ -91,8 +96,22 @@ int TCP::dns(string website){
     recvfrom(fd,&recvPkt,sizeof(recvPkt),0,(struct sockaddr*) &srv,&srvlen);
     cout<<"Received IP address from server :"<<recvPkt.data<<endl;
 
-    memset(&sendPkt,0,sizeof(sendPkt));
-    memset(&recvPkt,0,sizeof(recvPkt));
+    pktClear();
+    return 0;
+}
+
+int TCP::math(string function){
+    pktClear();
+    
+    sendPkt.mode = MATH;
+    strcpy(sendPkt.data , function.c_str());
+    sendto(fd,&sendPkt,sizeof(sendPkt),0,(struct sockaddr*) &srv,sizeof(srv));
+    cout<<"Sending mathematical equation to server "<<endl;
+    recvfrom(fd,&recvPkt,sizeof(recvPkt),0,(struct sockaddr*) &srv,&srvlen);
+    cout<<"Recevied answer from server :"<<recvPkt.data<<endl;
+
+    pktClear();
+    return 0;
 }
 
 int main(){
@@ -100,6 +119,14 @@ int main(){
     TCP client;
     client.handshake();
     client.dns("www.google.com");
+    client.math("add 3.14 2");
+    client.math("sub 2 5");
+    client.math("mul 2 5.7");
+    client.math("divide 40.5 5");
+    client.math("power 2 3");
+    client.math("sqrt 26");
+
+    return 0;
 }
 
 void test(int func,const char* errormsg){
