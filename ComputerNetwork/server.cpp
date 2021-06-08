@@ -5,6 +5,8 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <netdb.h>
@@ -16,6 +18,7 @@
 #define DEBUG 1
 #define ACK 1
 #define SYN 4 
+#define FIN 5
 #define DNS 1
 #define MATH 2
 #define FILE 3
@@ -205,7 +208,34 @@ int math(pkt request){
 }
 
 int file(pkt request){
+    pktClear();
+    string filename = request.data;
+    filename = "snd/"+filename;
+    int file = open(filename.c_str(),O_RDONLY);
+    int size = filesize(filename.c_str());
+    const int offset = rand() % 10000;
+    int seq = offset;
+
+    sendPkt.seqNum = seq;
+    sendPkt.ackNum = size;
+    sendto(fd,&sendPkt,sizeof(sendPkt),0,(struct sockaddr*) &cli,sizeof(cli));
+    pktClear();
+    cout<<"Transfer file to client..."<<endl;
     
+    while(recvfrom(fd,&recvPkt,sizeof(recvPkt),0,(struct sockaddr*) &cli,&clilen)&&recvPkt.flag[FIN]!=1){
+        cout<<"Received Packet: ACK: "<<recvPkt.ackNum<<endl;
+        lseek(file,recvPkt.ackNum,SEEK_SET);
+        read(file,sendPkt.data,MSS);
+        sendPkt.seqNum = offset + recvPkt.ackNum;
+        sendto(fd,&sendPkt,sizeof(sendPkt),0,(struct sockaddr*) &cli,sizeof(cli));
+        cout<<"Sending file Pkt (seq: "<<sendPkt.seqNum<<")\n";
+        pktClear();
+    }
+
+    cout<<"File transfer done"<<endl;
+    close(file);
+    pktClear();
+    return 0;
 }
 
 int filesize(const char *filename){

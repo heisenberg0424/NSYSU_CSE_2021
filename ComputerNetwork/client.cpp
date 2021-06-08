@@ -5,6 +5,8 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <netdb.h>
@@ -15,8 +17,10 @@
 #define DEBUG 1 
 #define ACK 1
 #define SYN 4
+#define FIN 5
 #define DNS 1
 #define MATH 2
+#define FILE 3
 using namespace std;
 
 void test(int func,const char* errormsg);
@@ -38,6 +42,7 @@ public:
     int handshake();
     int dns(string website);
     int math(string function);
+    int file(string filename);
     TCP();
     ~TCP(){}
 private:
@@ -114,6 +119,44 @@ int TCP::math(string function){
     return 0;
 }
 
+int TCP::file(string filename){
+    pktClear();
+    int size,offset,ack=0;
+    int file = open(("recv/"+filename).c_str(),O_WRONLY|O_TRUNC|O_CREAT,S_IRWXU);
+
+    strcpy(sendPkt.data,filename.c_str());
+    sendPkt.mode = FILE;
+    sendto(fd,&sendPkt,sizeof(sendPkt),0,(struct sockaddr*) &srv,sizeof(srv));
+    recvfrom(fd,&recvPkt,sizeof(recvPkt),0,(struct sockaddr*) &srv,&srvlen);
+    size = recvPkt.ackNum;
+    offset = recvPkt.seqNum;
+    pktClear();
+    sendPkt.ackNum=ack;
+    sendto(fd,&sendPkt,sizeof(sendPkt),0,(struct sockaddr*) &srv,sizeof(srv));
+
+    while(size>MSS){
+        recvfrom(fd,&recvPkt,sizeof(recvPkt),0,(struct sockaddr*) &srv,&srvlen);
+        cout<<"Received pkt from server (seq: "<<recvPkt.seqNum<<" )"<<endl;
+        if(recvPkt.seqNum-offset==ack){
+            test(write(file,recvPkt.data,MSS),"write file");
+            ack+=MSS;
+            size-=MSS;
+        }
+        pktClear();
+        sendPkt.ackNum=ack;
+        sendto(fd,&sendPkt,sizeof(sendPkt),0,(struct sockaddr*) &srv,sizeof(srv));
+    }
+    recvfrom(fd,&recvPkt,sizeof(recvPkt),0,(struct sockaddr*) &srv,&srvlen);
+    write(file,recvPkt.data,size);
+    pktClear();
+    sendPkt.flag[FIN]=1;
+    sendto(fd,&sendPkt,sizeof(sendPkt),0,(struct sockaddr*) &srv,sizeof(srv));
+
+    close(file);
+    pktClear();
+    return 0;
+}
+
 int main(){
     srand(time(NULL));
     TCP client;
@@ -125,7 +168,7 @@ int main(){
     client.math("divide 40.5 5");
     client.math("power 2 3");
     client.math("sqrt 26");
-
+    client.file("test");
     return 0;
 }
 
