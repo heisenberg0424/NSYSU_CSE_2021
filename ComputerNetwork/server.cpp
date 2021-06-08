@@ -147,6 +147,10 @@ int math(pkt request){
         }
     }
 
+    if(DEBUG){
+        cout<<"got math: "<<symbol<<endl;
+    }
+
     for(i;i<MSS;i++){
         if(request.data[i]=='\0'){
             i=MSS;
@@ -165,6 +169,10 @@ int math(pkt request){
         }
     }
 
+    if(DEBUG){
+        cout<<"x= "<<x;
+    }
+
     for(i;i<MSS;i++){
         if(request.data[i]!='\0'){
             split+= request.data[i];
@@ -175,6 +183,10 @@ int math(pkt request){
             split = "";
             break;
         }
+    }
+
+    if(DEBUG){
+        cout<<" y= "<<y<<endl;
     }
 
     cout<<"Calcualting function: "<<symbol<<", x = "<<x<<", y = "<<y<<endl;

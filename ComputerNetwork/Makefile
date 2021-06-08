@@ -3,3 +3,5 @@ all: client.cpp server.cpp
 	g++ -o client client.cpp
 clean: client server
 	rm server client
+test: server
+	./server

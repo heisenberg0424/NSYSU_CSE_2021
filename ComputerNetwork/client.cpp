@@ -14,7 +14,7 @@
 #define MSS 1000
 #define PORT 3000
 #define IP "192.168.50.11"
-#define DEBUG 1 
+#define DEBUG 0
 #define ACK 1
 #define SYN 4
 #define FIN 5
@@ -43,6 +43,7 @@ public:
     int dns(string website);
     int math(string function);
     int file(string filename);
+    void help();
     TCP();
     ~TCP(){}
 private:
@@ -157,19 +158,53 @@ int TCP::file(string filename){
     return 0;
 }
 
+void TCP::help(){
+    cout<<"Commands Example: "<<endl;
+    cout<<"dns www.example.com"<<endl;
+    cout<<"math add 3.14 2"<<endl;
+    cout<<"file myfile.txt"<<endl;
+}
+
 int main(){
+    string mode, command;
     srand(time(NULL));
     TCP client;
     client.handshake();
-    client.dns("www.google.com");
-    client.math("add 3.14 2");
-    client.math("sub 2 5");
-    client.math("mul 2 5.7");
-    client.math("divide 40.5 5");
-    client.math("power 2 3");
-    client.math("sqrt 26");
-    client.file("test");
-    return 0;
+
+    if(DEBUG){
+        client.dns("www.google.com");
+        client.math("add 3.14 2");
+        client.math("sub 2 5");
+        client.math("mul 2 5.7");
+        client.math("divide 40.5 5");
+        client.math("power 2 3");
+        client.math("sqrt 26");
+        client.file("test");
+        return 0;
+    }
+    
+    cout<<"Welcome to udp client, enter command or '--help' "<<endl;
+    while(1){
+        cout<<"[UDP@client]: ";
+        cin>>mode;
+        if(mode=="help"){
+            client.help();
+            continue;
+        }
+        cin.ignore();
+        getline(cin,command);
+        
+        if(mode=="dns"){
+            client.dns(command);
+        }
+        if(mode=="math"){
+            client.math(command);
+        }
+        if(mode=="file"){
+            client.file(command);
+        }
+    }
+    
 }
 
 void test(int func,const char* errormsg){
