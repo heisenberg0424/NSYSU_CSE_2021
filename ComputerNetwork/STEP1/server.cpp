@@ -25,8 +25,6 @@
 using namespace std;
 
 typedef struct segment{
-    char srcPort[2];
-    char destPort[2];
     uint32_t seqNum;
     uint32_t ackNum;
     bool flag[6];

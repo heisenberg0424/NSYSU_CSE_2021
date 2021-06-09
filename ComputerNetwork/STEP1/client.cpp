@@ -26,8 +26,6 @@ using namespace std;
 void test(int func,const char* errormsg);
 
 typedef struct segment{
-    char srcPort[2];
-    char destPort[2];
     uint32_t seqNum;
     uint32_t ackNum;
     bool flag[6];
