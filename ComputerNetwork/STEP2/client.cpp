@@ -14,7 +14,7 @@
 #define MSS 1000
 #define PORT 3000
 #define IP "192.168.50.11"
-#define DEBUG 0
+#define DEBUG 1
 #define ACK 1
 #define SYN 4
 #define FIN 5
@@ -179,6 +179,7 @@ int main(){
         client.math("divide 40.5 5");
         client.math("power 2 3");
         client.math("sqrt 26");
+        sleep(3);
         client.file("test");
         return 0;
     }

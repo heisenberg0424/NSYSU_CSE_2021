@@ -2,6 +2,6 @@ all: client.cpp server.cpp
 	g++ -o server server.cpp
 	g++ -o client client.cpp
 clean: client server
-	rm server client recv/*
+	rm -f server client recv/*
 test: server
 	./server
