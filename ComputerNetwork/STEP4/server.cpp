@@ -57,12 +57,14 @@ private:
     int fd,ack;
     pkt recvPkt,sendPkt;
     int dns(pkt request);
+    int clientport;
     int math(pkt request);
     int file(pkt request);
     int filesize(const char *filename);
 };
 
 Server::Server(int port,pkt packet){
+    clientport = port;
     fd = fdlisten(port);
     // C++ 11 random
     random_device rd;
@@ -252,7 +254,7 @@ int Server::file(pkt request){
         read(file,sendPkt.data,MSS);
         sendPkt.seqNum = offset + recvPkt.ackNum;
         sendto(fd,&sendPkt,sizeof(sendPkt),0,(struct sockaddr*) &cli,sizeof(cli));
-        cout<<"Sending file Pkt (seq: "<<sendPkt.seqNum<<")\n";
+        cout<<"Sending file Pkt (seq: "<<sendPkt.seqNum<<") to client with port "<<clientport<<endl;
         ack = sendPkt.seqNum;
         pktClear();
 
@@ -266,7 +268,7 @@ int Server::file(pkt request){
         read(file,sendPkt.data,MSS);
         sendPkt.seqNum = ack+MSS;
         sendto(fd,&sendPkt,sizeof(sendPkt),0,(struct sockaddr*) &cli,sizeof(cli));
-        cout<<"Sending file Pkt (seq: "<<sendPkt.seqNum<<")\n";
+        cout<<"Sending file Pkt (seq: "<<sendPkt.seqNum<<") to client with port "<<clientport<<endl;
         ack = sendPkt.seqNum;
         pktClear();
     }
